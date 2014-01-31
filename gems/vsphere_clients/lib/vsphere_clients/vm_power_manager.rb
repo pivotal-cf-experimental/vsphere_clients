@@ -1,6 +1,6 @@
 module VsphereClients
   class VmPowerManager
-    def initialize(vm, logger)
+    def initialize(vm, logger=VsphereClients::LoggerFactory)
       @vm = vm
       @logger = logger
     end

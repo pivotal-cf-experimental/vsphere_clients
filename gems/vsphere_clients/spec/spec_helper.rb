@@ -33,4 +33,7 @@ end
 RSpec.configure do |config|
   config.include(FixtureHelpers)
   config.include(WaitHelpers, type: :integration)
+
+  # silence logging output in tests
+  config.before(:each) { VsphereClients::LoggerFactory.stub(logger: Logger.new("/dev/null")) }
 end

@@ -2,6 +2,7 @@ require "net/http"
 require "logger"
 require "rbvmomi"
 
+require "logger_factory"
 require "vsphere_clients/version"
 require "vsphere_clients/connection_clients"
 require "vsphere_clients/vm_folder_client"

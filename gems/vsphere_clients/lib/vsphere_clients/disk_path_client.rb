@@ -6,7 +6,7 @@ module VsphereClients
 
     CSRF_NONCE_INPUT = /name="vmware-session-nonce" type="hidden" value="?(?<nonce>[^\s^"]+)"/
 
-    def initialize(user, password, datacenter, datastore_name, logger=Logger.new(STDOUT))
+    def initialize(user, password, datacenter, datastore_name, logger=VsphereClients::LoggerFactory.logger)
       @user = user
       @password = password
       @datacenter = datacenter
