@@ -23,4 +23,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec"
 
   spec.add_dependency "rbvmomi"
+  spec.add_dependency "nokogiri", "= 1.5.5"
 end
