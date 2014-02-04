@@ -1,3 +1,5 @@
+require "rbvmomi"
+
 module VsphereClients
   class ConnectionClients
     def self.from_config(config)

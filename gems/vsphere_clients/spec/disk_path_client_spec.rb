@@ -1,6 +1,7 @@
 require "spec_helper"
+require "vsphere_clients/disk_path_client"
 
-describe VsphereClients::DiskPathClient, type: :integration do
+describe VsphereClients::DiskPathClient do
   let(:test_disk_path) { "disk_path_spec_playground" }
 
   before(:all) do

@@ -1,3 +1,5 @@
+require "logger"
+
 module VsphereClients
   class LoggerFactory
     def self.logger

@@ -1,4 +1,5 @@
 require "spec_helper"
+require "vsphere_clients/vm_power_manager"
 
 describe VsphereClients::VmPowerManager do
   describe "#power_off" do

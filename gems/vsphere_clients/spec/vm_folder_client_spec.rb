@@ -1,6 +1,8 @@
 require "spec_helper"
+require "vsphere_clients/vm_folder_client"
+require "vsphere_clients/connection_clients"
 
-describe VsphereClients::VmFolderClient, type: :integration do
+describe VsphereClients::VmFolderClient do
   let(:test_playground_folder) { "vm_folder_client_spec_playground" }
   let(:parent_folder) { "#{test_playground_folder}/foo" }
   let(:nested_folder) { "#{parent_folder}/bargle" }
