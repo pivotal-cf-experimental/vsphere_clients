@@ -1,0 +1,14 @@
+---
+components:
+  - type: microbosh
+    properties:
+      - definition: vcenter_ip
+        value: 88.198.186.236
+      - definition: login_credentials
+        value:
+          identity: root
+          password: >:C # note: we don't want to commit the real password. Need to ERB this, and get the password from an environment variable.
+      - definition: datacenter
+        value: wine-dc
+      - definition: datastore
+        value: wine-ds
