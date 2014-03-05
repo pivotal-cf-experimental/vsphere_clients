@@ -1,6 +1,6 @@
 module VsphereClients
   class VmFolderClient
-    def initialize(datacenter, logger=VsphereClients::LoggerFactory.logger)
+    def initialize(datacenter, logger)
       @datacenter = datacenter
       @logger = logger
     end

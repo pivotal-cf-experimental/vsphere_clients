@@ -6,12 +6,11 @@ module VsphereClients
 
     CSRF_NONCE_INPUT = /name="vmware-session-nonce" type="hidden" value="?(?<nonce>[^\s^"]+)"/
 
-    def initialize(user, password, datacenter, datastore_name, logger=VsphereClients::LoggerFactory.logger)
+    def initialize(user, password, datacenter, logger)
       @user = user
       @password = password
       @datacenter = datacenter
       @datacenter_ref = datacenter._ref
-      @datastore_name = datastore_name
       @logger = logger
     end
 
@@ -33,24 +32,24 @@ module VsphereClients
       end
     end
 
-    def path_exists?(disk_path)
-      datastore = @datacenter.find_datastore(@datastore_name)
+    def path_exists?(datastore_name, disk_path)
+      datastore = @datacenter.find_datastore(datastore_name)
       !disk_path.nil? && datastore.exists?(disk_path)
     end
 
     # - Java API does not provide this functionality
     # - Action is *synchronous*
-    def create_path(disk_path)
-      raise ArgumentError if path_exists?(disk_path)
+    def create_path(datastore_name, disk_path)
+      raise ArgumentError if path_exists?(datastore_name, disk_path)
       raise ArgumentError unless valid_path?(disk_path)
-      create_path!(disk_path)
+      create_path!(datastore_name, disk_path)
     end
 
     # - Unlike Java API, mob api deletes directories regardless their emptiness
     # - Action is *asynchronous*
-    def delete_path(disk_path)
+    def delete_path(datastore_name, disk_path)
       raise ArgumentError unless valid_path?(disk_path)
-      delete_path!(disk_path)
+      delete_path!(datastore_name, disk_path)
     end
 
     private
@@ -60,10 +59,10 @@ module VsphereClients
     end
 
     # same as above, but skip checking for slashes in the path name
-    def create_path!(disk_path)
+    def create_path!(datastore_name, disk_path)
       request = build_nonced_form_post(
         "/mob/?moid=FileManager&method=makeDirectory", {
-        name: "[#{@datastore_name}] #{disk_path}",
+        name: "[#{datastore_name}] #{disk_path}",
         datacenter: %{<datacenter type="Datacenter" xsi:type="ManagedObjectReference">#{@datacenter_ref}</datacenter>},
         createParentDirectories: true,
       })
@@ -78,10 +77,10 @@ module VsphereClients
     end
 
     # same as above, but skip checking for slashes in the path name
-    def delete_path!(disk_path)
+    def delete_path!(datastore_name, disk_path)
       request = build_nonced_form_post(
         "/mob/?moid=FileManager&method=deleteFile", {
-        name: "[#{@datastore_name}] #{disk_path}",
+        name: "[#{datastore_name}] #{disk_path}",
         datacenter: %{<datacenter type="Datacenter" xsi:type="ManagedObjectReference">#{@datacenter_ref}</datacenter>},
       })
 

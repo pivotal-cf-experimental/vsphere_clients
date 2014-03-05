@@ -1,6 +1,7 @@
 require "spec_helper"
 require "vsphere_clients/vm_folder_client"
 require "vsphere_clients/connection_clients"
+require "logger"
 
 describe VsphereClients::VmFolderClient do
   let(:test_playground_folder) { "vm_folder_client_spec_playground" }
@@ -16,7 +17,7 @@ describe VsphereClients::VmFolderClient do
     subject.delete_folder(test_playground_folder)
   end
 
-  subject { described_class.new(@datacenter) }
+  subject { described_class.new(@datacenter, Logger.new(STDERR).tap { |l| l.level = Logger::FATAL }) }
 
   context "when it can successfully create folder" do
     after do

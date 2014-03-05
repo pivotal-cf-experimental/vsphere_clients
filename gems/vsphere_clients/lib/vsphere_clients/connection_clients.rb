@@ -36,21 +36,10 @@ module VsphereClients
       @datacenter ||= connection.serviceInstance.find_datacenter(@datacenter_name)
     end
 
+    attr_reader :user, :password, :datastore_name
+
     def vm_folder_client
-      VsphereClients::VmFolderClient.new(datacenter)
-    end
-
-    def datastore
-      @datastore ||= datacenter.find_datastore(@datastore_name)
-    end
-
-    def disk_path_client
-      VsphereClients::DiskPathClient.new(
-        @user,
-        @password,
-        datacenter,
-        @datastore_name,
-      )
+      VsphereClients::VmFolderClient.new(datacenter, Logger.new(STDERR))
     end
 
     private

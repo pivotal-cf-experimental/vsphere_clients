@@ -1,12 +1,12 @@
 require "spec_helper"
 require "vsphere_clients/vm_power_manager"
+require "logger"
 
 describe VsphereClients::VmPowerManager do
   describe "#power_off" do
-    subject { described_class.new(vm, logger) }
+    subject { described_class.new(vm, Logger.new(STDERR).tap { |l| l.level = Logger::FATAL }) }
     let(:vm)         { double(:vm, name: "vm-name", runtime: vm_runtime) }
     let(:vm_runtime) { double(:runtime) }
-    let(:logger)     { Logger.new("/dev/null") }
 
     def perform
       subject.power_off
