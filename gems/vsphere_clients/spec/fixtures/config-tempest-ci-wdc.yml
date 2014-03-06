@@ -10,5 +10,5 @@ components:
           password: vmware
       - definition: datacenter
         value: wdc51-dc
-      - definition: datastore
+      - definition: datastores
         value: datastore_1800

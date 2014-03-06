@@ -8,7 +8,7 @@ module VsphereClients
         microbosh_property(config, "login_credentials")["identity"],
         microbosh_property(config, "login_credentials")["password"],
         microbosh_property(config, "datacenter"),
-        microbosh_property(config, "datastore"),
+        microbosh_property(config, "datastores"),
       )
     end
 
@@ -24,19 +24,19 @@ module VsphereClients
       property["value"]
     end
 
-    def initialize(ip, user, password, datacenter_name, datastore_name)
+    def initialize(ip, user, password, datacenter_name, datastore_names)
       @ip = ip
       @user = user
       @password = password
       @datacenter_name = datacenter_name
-      @datastore_name = datastore_name
+      @datastore_names = datastore_names
     end
 
     def datacenter
       @datacenter ||= connection.serviceInstance.find_datacenter(@datacenter_name)
     end
 
-    attr_reader :user, :password, :datastore_name
+    attr_reader :user, :password, :datastore_names
 
     def vm_folder_client
       VsphereClients::VmFolderClient.new(datacenter, Logger.new(STDERR))

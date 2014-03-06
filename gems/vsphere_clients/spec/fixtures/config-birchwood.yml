@@ -10,5 +10,5 @@ components:
           password: vmware
       - definition: datacenter
         value: anchovy-dc
-      - definition: datastore
+      - definition: datastores
         value: anchovy-ds

@@ -5,7 +5,7 @@ require "logger"
 
 describe VsphereClients::DiskPathClient do
   let(:test_disk_path) { "disk_path_spec_playground" }
-  let(:datastore_name) { VsphereClients::ConnectionClients.microbosh_property(@config, "datastore") }
+  let(:datastore_names) { VsphereClients::ConnectionClients.microbosh_property(@config, "datastores") }
   
   before(:all) do
     @config = fixture_yaml("config-#{`hostname`.strip}.yml")
@@ -23,29 +23,29 @@ describe VsphereClients::DiskPathClient do
   end
 
   context "when it can successfully create the disk path" do
-    def wait_for_disk_path_to_exist(datastore_name, disk_path)
-      wait(5, 1) { @datacenter.find_datastore(datastore_name).exists?(disk_path).should be_true }
+    def wait_for_disk_path_to_exist(datastore_names, disk_path)
+      wait(5, 1) { @datacenter.find_datastore(datastore_names).exists?(disk_path).should be_true }
     end
 
-    def wait_for_disk_path_to_not_exist(datastore_name, disk_path)
-      wait(5, 1) { @datacenter.find_datastore(datastore_name).exists?(disk_path).should be_false }
+    def wait_for_disk_path_to_not_exist(datastore_names, disk_path)
+      wait(5, 1) { @datacenter.find_datastore(datastore_names).exists?(disk_path).should be_false }
     end
 
-    after { subject.delete_path(datastore_name, test_disk_path) }
+    after { subject.delete_path(datastore_names, test_disk_path) }
 
     it "creates and deletes the given disk path" do
-      wait_for_disk_path_to_not_exist(datastore_name, test_disk_path)
+      wait_for_disk_path_to_not_exist(datastore_names, test_disk_path)
 
-      subject.create_path(datastore_name, test_disk_path)
-      wait_for_disk_path_to_exist(datastore_name, test_disk_path)
+      subject.create_path(datastore_names, test_disk_path)
+      wait_for_disk_path_to_exist(datastore_names, test_disk_path)
 
-      subject.delete_path(datastore_name, test_disk_path)
-      wait_for_disk_path_to_not_exist(datastore_name, test_disk_path)
+      subject.delete_path(datastore_names, test_disk_path)
+      wait_for_disk_path_to_not_exist(datastore_names, test_disk_path)
     end
 
     it "doesn't raise an error when deleting a non-existent disk path" do
       expect {
-        subject.delete_path(datastore_name, test_disk_path)
+        subject.delete_path(datastore_names, test_disk_path)
       }.not_to raise_error
     end
 
@@ -53,29 +53,29 @@ describe VsphereClients::DiskPathClient do
       valid_file_name = "valid %"
 
       expect {
-        subject.create_path(datastore_name, valid_file_name)
+        subject.create_path(datastore_names, valid_file_name)
       }.to_not raise_error
       expect {
-        subject.delete_path(datastore_name, valid_file_name)
+        subject.delete_path(datastore_names, valid_file_name)
       }.to_not raise_error
     end
 
     context "when other directories exist" do
       let(:other_path) { "bagels_and_lox" }
-      before { subject.create_path(datastore_name, other_path) }
-      after { subject.delete_path(datastore_name, other_path) }
+      before { subject.create_path(datastore_names, other_path) }
+      after { subject.delete_path(datastore_names, other_path) }
 
       it "doesn't delete other directories" do
-        wait_for_disk_path_to_not_exist(datastore_name, test_disk_path)
-        wait_for_disk_path_to_exist(datastore_name, other_path)
+        wait_for_disk_path_to_not_exist(datastore_names, test_disk_path)
+        wait_for_disk_path_to_exist(datastore_names, other_path)
 
-        subject.create_path(datastore_name, test_disk_path)
-        wait_for_disk_path_to_exist(datastore_name, test_disk_path)
-        wait_for_disk_path_to_exist(datastore_name, other_path)
+        subject.create_path(datastore_names, test_disk_path)
+        wait_for_disk_path_to_exist(datastore_names, test_disk_path)
+        wait_for_disk_path_to_exist(datastore_names, other_path)
 
-        subject.delete_path(datastore_name, test_disk_path)
-        wait_for_disk_path_to_not_exist(datastore_name, test_disk_path)
-        wait_for_disk_path_to_exist(datastore_name, other_path)
+        subject.delete_path(datastore_names, test_disk_path)
+        wait_for_disk_path_to_not_exist(datastore_names, test_disk_path)
+        wait_for_disk_path_to_exist(datastore_names, other_path)
       end
     end
   end
@@ -90,13 +90,13 @@ describe VsphereClients::DiskPathClient do
     (generally_bad_paths + nested_bad_paths).each do |bad_path|
       it "raises an ArgumentError instead of trying to create #{bad_path.inspect}" do
         expect {
-          subject.create_path(datastore_name, bad_path)
+          subject.create_path(datastore_names, bad_path)
         }.to raise_error(ArgumentError)
       end
 
       it "raises an ArgumentError instead of trying to delete #{bad_path.inspect}" do
         expect {
-          subject.delete_path(datastore_name, bad_path)
+          subject.delete_path(datastore_names, bad_path)
         }.to raise_error(ArgumentError)
       end
     end
