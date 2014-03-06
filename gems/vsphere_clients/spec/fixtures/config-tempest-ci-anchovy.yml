@@ -1,14 +1,6 @@
 ---
-components:
-  - type: microbosh
-    properties:
-      - definition: vcenter_ip
-        value: 172.16.64.3
-      - definition: login_credentials
-        value:
-          identity: root
-          password: vmware
-      - definition: datacenter
-        value: anchovy-dc
-      - definition: datastores
-        value: anchovy-ds
+vcenter_ip: 172.16.64.3
+username: root
+password: vmware
+datacenter_name: anchovy-dc
+datastore_name: anchovy-ds
