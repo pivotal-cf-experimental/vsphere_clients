@@ -1,42 +1,36 @@
 require "spec_helper"
 require "vsphere_clients/vm_folder_client"
-require "vsphere_clients/connection_clients"
 require "logger"
 
 describe VsphereClients::VmFolderClient do
   let(:test_playground_folder) { "vm_folder_client_spec_playground" }
   let(:parent_folder) { "#{test_playground_folder}/foo" }
   let(:nested_folder) { "#{parent_folder}/bargle" }
+  let(:vsphere_environment) { create_vsphere_environment(fixture_yaml("config-#{`hostname`.strip}.yml")) }
+  let(:datacenter) { vsphere_environment.datacenter }
 
-  before(:all) do
-    config = fixture_yaml("config-#{`hostname`.strip}.yml")
-    @datacenter = VsphereClients::ConnectionClients.from_config(config).datacenter
-  end
+  after(:all) { subject.delete_folder(test_playground_folder) }
 
-  after(:all) do
-    subject.delete_folder(test_playground_folder)
-  end
-
-  subject { described_class.new(@datacenter, Logger.new(STDERR).tap { |l| l.level = Logger::FATAL }) }
+  subject { described_class.new(datacenter, Logger.new(STDERR).tap { |l| l.level = Logger::FATAL }) }
 
   context "when it can successfully create folder" do
     after do
-      folder = @datacenter.vmFolder.find(test_playground_folder)
+      folder = datacenter.vmFolder.find(test_playground_folder)
       folder.Destroy_Task.wait_for_completion if folder
     end
 
     it "creates and deletes the given VM folder" do
-      @datacenter.vmFolder.traverse(nested_folder).should be_nil
+      datacenter.vmFolder.traverse(nested_folder).should be_nil
 
       subject.create_folder(nested_folder)
-      @datacenter.vmFolder.traverse(nested_folder).should_not be_nil
+      datacenter.vmFolder.traverse(nested_folder).should_not be_nil
 
       subject.delete_folder(nested_folder)
-      @datacenter.vmFolder.traverse(nested_folder).should be_nil
+      datacenter.vmFolder.traverse(nested_folder).should be_nil
     end
 
     it "propagates rbvmomi errors" do
-      @datacenter
+      datacenter
         .stub(:vmFolder)
         .and_raise(RbVmomi::Fault.new("error", nil))
 
@@ -45,15 +39,15 @@ describe VsphereClients::VmFolderClient do
       }.to raise_error(RbVmomi::Fault)
 
       # unstub to make sure that after block does not fail
-      @datacenter.unstub(:vmFolder)
+      datacenter.unstub(:vmFolder)
     end
 
     it "doesn't delete parent folders" do
       subject.create_folder(nested_folder)
       subject.delete_folder(nested_folder)
-      @datacenter.vmFolder.traverse(nested_folder).should be_nil
-      @datacenter.vmFolder.traverse(parent_folder).should_not be_nil
-      @datacenter.vmFolder.traverse(test_playground_folder).should_not be_nil
+      datacenter.vmFolder.traverse(nested_folder).should be_nil
+      datacenter.vmFolder.traverse(parent_folder).should_not be_nil
+      datacenter.vmFolder.traverse(test_playground_folder).should_not be_nil
     end
 
     it "doesn't delete sibling folders" do
@@ -62,8 +56,8 @@ describe VsphereClients::VmFolderClient do
 
       subject.create_folder(nested_sibling)
       subject.delete_folder(nested_folder)
-      @datacenter.vmFolder.traverse(nested_folder).should be_nil
-      @datacenter.vmFolder.traverse(nested_sibling).should_not be_nil
+      datacenter.vmFolder.traverse(nested_folder).should be_nil
+      datacenter.vmFolder.traverse(nested_sibling).should_not be_nil
     end
 
     context "when there is a folder with slashes in the name " +
@@ -74,22 +68,22 @@ describe VsphereClients::VmFolderClient do
         # creates a single top level folder whose name is something/with/slashes
         # does not create a nested structure
         # NB: the name of this object when retrieved by RbVmomi will be something%2fwith%2fslashes
-        @datacenter.vmFolder.CreateFolder(name: nested_folder)
+        datacenter.vmFolder.CreateFolder(name: nested_folder)
       end
 
-      after { @datacenter.vmFolder.traverse(unnested_folder_with_slashes).Destroy_Task.wait_for_completion }
+      after { datacenter.vmFolder.traverse(unnested_folder_with_slashes).Destroy_Task.wait_for_completion }
 
       it "doesn't delete the folder with slashes in its name" do
-        @datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
-        @datacenter.vmFolder.traverse(nested_folder).should be_nil
+        datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
+        datacenter.vmFolder.traverse(nested_folder).should be_nil
 
         subject.create_folder(nested_folder)
-        @datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
-        @datacenter.vmFolder.traverse(nested_folder).should_not be_nil
+        datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
+        datacenter.vmFolder.traverse(nested_folder).should_not be_nil
 
         subject.delete_folder(nested_folder)
-        @datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
-        @datacenter.vmFolder.traverse(nested_folder).should be_nil
+        datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
+        datacenter.vmFolder.traverse(nested_folder).should be_nil
       end
     end
   end
@@ -144,7 +138,7 @@ describe VsphereClients::VmFolderClient do
 
         it "deletes the folder" do
           subject.delete_folder(test_playground_folder)
-          @datacenter.vmFolder.traverse(test_playground_folder).should be_nil
+          datacenter.vmFolder.traverse(test_playground_folder).should be_nil
         end
       end
 
@@ -157,9 +151,9 @@ describe VsphereClients::VmFolderClient do
 
         it "deletes the folder and all sub-folders" do
           subject.delete_folder(test_playground_folder)
-          @datacenter.vmFolder.traverse(test_playground_folder).should be_nil
-          @datacenter.vmFolder.traverse("#{test_playground_folder}/folder1").should be_nil
-          @datacenter.vmFolder.traverse("#{test_playground_folder}/folder2").should be_nil
+          datacenter.vmFolder.traverse(test_playground_folder).should be_nil
+          datacenter.vmFolder.traverse("#{test_playground_folder}/folder1").should be_nil
+          datacenter.vmFolder.traverse("#{test_playground_folder}/folder2").should be_nil
         end
       end
 
@@ -176,7 +170,7 @@ describe VsphereClients::VmFolderClient do
         let(:sub_folder)    { double(:sub_folder, name: "sub-folder") }
 
         before do
-          @datacenter.stub_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
+          datacenter.stub_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
           sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
           sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
         end
@@ -279,7 +273,7 @@ describe VsphereClients::VmFolderClient do
       let(:sub_folder)  { double(:sub_folder) }
 
       before do
-        @datacenter.stub_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
+        datacenter.stub_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
       end
 
       context "when folder has no VMs" do

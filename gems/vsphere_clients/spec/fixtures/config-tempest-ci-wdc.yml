@@ -1,14 +1,6 @@
 ---
-components:
-  - type: microbosh
-    properties:
-      - definition: vcenter_ip
-        value: 10.146.17.1
-      - definition: login_credentials
-        value:
-          identity: root
-          password: vmware
-      - definition: datacenter
-        value: wdc51-dc
-      - definition: datastores
-        value: datastore_1800
+vcenter_ip: 10.146.17.1
+username: root
+password: vmware
+datacenter_name: wdc51-dc
+datastore_name: datastore_1800

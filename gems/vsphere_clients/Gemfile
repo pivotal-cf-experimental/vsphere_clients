@@ -3,4 +3,7 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in vsphere_clients.gemspec
 gemspec
 
-gem "fixture_helpers", path: "../fixture_helpers"
+group :test do
+  gem "fixture_helpers", path: "../fixture_helpers"
+  gem "vsphere_integration", path: "../vsphere_integration"
+end
