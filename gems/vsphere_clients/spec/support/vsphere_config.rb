@@ -1,5 +1,5 @@
 require "rbvmomi"
-require "vsphere_integration"
+require "environment"
 
 module VsphereIntegrationHelpers
   def create_vsphere_environment(config)

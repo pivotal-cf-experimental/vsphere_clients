@@ -1,4 +1,4 @@
-require "vsphere_clients/vm_power_manager"
+require "vm_power_manager"
 
 module VsphereClients
   class VmFolderClient

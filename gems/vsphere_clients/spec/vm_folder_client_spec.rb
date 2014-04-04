@@ -1,5 +1,5 @@
 require "spec_helper"
-require "vsphere_clients/vm_folder_client"
+require "vm_folder_client"
 require "logger"
 
 describe VsphereClients::VmFolderClient do

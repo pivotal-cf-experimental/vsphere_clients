@@ -1,5 +1,5 @@
 require "spec_helper"
-require "vsphere_clients/vm_power_manager"
+require "vm_power_manager"
 require "logger"
 
 describe VsphereClients::VmPowerManager do

@@ -1,5 +1,5 @@
 require "spec_helper"
-require "vsphere_clients/disk_path_client"
+require "disk_path_client"
 require "logger"
 
 describe VsphereClients::DiskPathClient do
