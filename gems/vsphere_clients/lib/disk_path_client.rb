@@ -26,9 +26,10 @@ module VsphereClients
       @cookie = response["Set-Cookie"]
       @nonce = response.body.scan(CSRF_NONCE_INPUT).flatten.first
 
-      unless @nonce
+      if @nonce.nil?
         @logger.error("disk_path_client.start_session.failed")
-        raise(NonceNotFound, response_error_message("Failed to obtain nonce", response))
+        @logger.error(response.body)
+        raise(NonceNotFoundError, "Failed to obtain VMware session nonce, you may need to enable vCenter Server Managed Object Browser")
       end
     end
 
