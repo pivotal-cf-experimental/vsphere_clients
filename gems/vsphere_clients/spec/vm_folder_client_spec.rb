@@ -20,18 +20,18 @@ describe VsphereClients::VmFolderClient do
     end
 
     it "creates and deletes the given VM folder" do
-      datacenter.vmFolder.traverse(nested_folder).should be_nil
+      expect(datacenter.vmFolder.traverse(nested_folder)).to be_nil
 
       subject.create_folder(nested_folder)
-      datacenter.vmFolder.traverse(nested_folder).should_not be_nil
+      expect(datacenter.vmFolder.traverse(nested_folder)).not_to be_nil
 
       subject.delete_folder(nested_folder)
-      datacenter.vmFolder.traverse(nested_folder).should be_nil
+      expect(datacenter.vmFolder.traverse(nested_folder)).to be_nil
     end
 
     it "propagates rbvmomi errors" do
-      datacenter
-        .stub(:vmFolder)
+      allow(datacenter)
+        .to receive(:vmFolder)
         .and_raise(RbVmomi::Fault.new("error", nil))
 
       expect {
@@ -39,15 +39,15 @@ describe VsphereClients::VmFolderClient do
       }.to raise_error(RbVmomi::Fault)
 
       # unstub to make sure that after block does not fail
-      datacenter.unstub(:vmFolder)
+      allow(datacenter).to receive(:vmFolder).and_call_original
     end
 
     it "doesn't delete parent folders" do
       subject.create_folder(nested_folder)
       subject.delete_folder(nested_folder)
-      datacenter.vmFolder.traverse(nested_folder).should be_nil
-      datacenter.vmFolder.traverse(parent_folder).should_not be_nil
-      datacenter.vmFolder.traverse(test_playground_folder).should_not be_nil
+      expect(datacenter.vmFolder.traverse(nested_folder)).to be_nil
+      expect(datacenter.vmFolder.traverse(parent_folder)).not_to be_nil
+      expect(datacenter.vmFolder.traverse(test_playground_folder)).not_to be_nil
     end
 
     it "doesn't delete sibling folders" do
@@ -56,8 +56,8 @@ describe VsphereClients::VmFolderClient do
 
       subject.create_folder(nested_sibling)
       subject.delete_folder(nested_folder)
-      datacenter.vmFolder.traverse(nested_folder).should be_nil
-      datacenter.vmFolder.traverse(nested_sibling).should_not be_nil
+      expect(datacenter.vmFolder.traverse(nested_folder)).to be_nil
+      expect(datacenter.vmFolder.traverse(nested_sibling)).not_to be_nil
     end
 
     context "when there is a folder with slashes in the name " +
@@ -74,16 +74,16 @@ describe VsphereClients::VmFolderClient do
       after { datacenter.vmFolder.traverse(unnested_folder_with_slashes).Destroy_Task.wait_for_completion }
 
       it "doesn't delete the folder with slashes in its name" do
-        datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
-        datacenter.vmFolder.traverse(nested_folder).should be_nil
+        expect(datacenter.vmFolder.traverse(unnested_folder_with_slashes)).not_to be_nil
+        expect(datacenter.vmFolder.traverse(nested_folder)).to be_nil
 
         subject.create_folder(nested_folder)
-        datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
-        datacenter.vmFolder.traverse(nested_folder).should_not be_nil
+        expect(datacenter.vmFolder.traverse(unnested_folder_with_slashes)).not_to be_nil
+        expect(datacenter.vmFolder.traverse(nested_folder)).not_to be_nil
 
         subject.delete_folder(nested_folder)
-        datacenter.vmFolder.traverse(unnested_folder_with_slashes).should_not be_nil
-        datacenter.vmFolder.traverse(nested_folder).should be_nil
+        expect(datacenter.vmFolder.traverse(unnested_folder_with_slashes)).not_to be_nil
+        expect(datacenter.vmFolder.traverse(nested_folder)).to be_nil
       end
     end
   end
@@ -138,7 +138,7 @@ describe VsphereClients::VmFolderClient do
 
         it "deletes the folder" do
           subject.delete_folder(test_playground_folder)
-          datacenter.vmFolder.traverse(test_playground_folder).should be_nil
+          expect(datacenter.vmFolder.traverse(test_playground_folder)).to be_nil
         end
       end
 
@@ -151,9 +151,9 @@ describe VsphereClients::VmFolderClient do
 
         it "deletes the folder and all sub-folders" do
           subject.delete_folder(test_playground_folder)
-          datacenter.vmFolder.traverse(test_playground_folder).should be_nil
-          datacenter.vmFolder.traverse("#{test_playground_folder}/folder1").should be_nil
-          datacenter.vmFolder.traverse("#{test_playground_folder}/folder2").should be_nil
+          expect(datacenter.vmFolder.traverse(test_playground_folder)).to be_nil
+          expect(datacenter.vmFolder.traverse("#{test_playground_folder}/folder1")).to be_nil
+          expect(datacenter.vmFolder.traverse("#{test_playground_folder}/folder2")).to be_nil
         end
       end
 
@@ -170,34 +170,34 @@ describe VsphereClients::VmFolderClient do
         let(:sub_folder)    { double(:sub_folder, name: "sub-folder") }
 
         before do
-          datacenter.stub_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
-          sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
-          sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(datacenter).to receive_message_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
+          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
+          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
         end
 
 
         context "when VMs are in folder" do
           before  do
-            folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1, vm2] }
-            folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1, vm2] }
+            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
           end
 
           it "deletes folder with powered ON VMs" do
-            vm_runtime1.should_receive(:powerState).once.ordered { "non-powered-off" }
-            vm1.should_receive(:PowerOffVM_Task).once.ordered { vim_task }
-            vm_runtime2.should_receive(:powerState).once.ordered { "non-powered-off" }
-            vm2.should_receive(:PowerOffVM_Task).once.ordered { vim_task }
-            folder.should_receive(:Destroy_Task).once { vim_task }
+            expect(vm_runtime1).to receive(:powerState).once.ordered { "non-powered-off" }
+            expect(vm1).to receive(:PowerOffVM_Task).once.ordered { vim_task }
+            expect(vm_runtime2).to receive(:powerState).once.ordered { "non-powered-off" }
+            expect(vm2).to receive(:PowerOffVM_Task).once.ordered { vim_task }
+            expect(folder).to receive(:Destroy_Task).once { vim_task }
 
             subject.delete_folder(test_playground_folder)
           end
 
           it "deletes folder with powered OFF VMs" do
-            vm_runtime1.should_receive(:powerState).once.ordered { "poweredOff" }
-            vm1.should_not_receive(:PowerOffVM_Task)
-            vm_runtime2.should_receive(:powerState).once.ordered { "poweredOff" }
-            vm2.should_not_receive(:PowerOffVM_Task)
-            folder.should_receive(:Destroy_Task).once { vim_task }
+            expect(vm_runtime1).to receive(:powerState).once.ordered { "poweredOff" }
+            expect(vm1).not_to receive(:PowerOffVM_Task)
+            expect(vm_runtime2).to receive(:powerState).once.ordered { "poweredOff" }
+            expect(vm2).not_to receive(:PowerOffVM_Task)
+            expect(folder).to receive(:Destroy_Task).once { vim_task }
 
             subject.delete_folder(test_playground_folder)
           end
@@ -205,26 +205,26 @@ describe VsphereClients::VmFolderClient do
 
         context "when VMs are in sub-folders" do
           before  do
-            folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
-            folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
+            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
           end
 
           it "deletes folder with powered ON VMs" do
-            vm_runtime1.should_receive(:powerState).once.ordered { "non-powered-off" }
-            vm1.should_receive(:PowerOffVM_Task).once.ordered { vim_task }
-            vm_runtime2.should_receive(:powerState).once.ordered { "non-powered-off" }
-            vm2.should_receive(:PowerOffVM_Task).once.ordered { vim_task }
-            folder.should_receive(:Destroy_Task).once { vim_task }
+            expect(vm_runtime1).to receive(:powerState).once.ordered { "non-powered-off" }
+            expect(vm1).to receive(:PowerOffVM_Task).once.ordered { vim_task }
+            expect(vm_runtime2).to receive(:powerState).once.ordered { "non-powered-off" }
+            expect(vm2).to receive(:PowerOffVM_Task).once.ordered { vim_task }
+            expect(folder).to receive(:Destroy_Task).once { vim_task }
 
             subject.delete_folder(test_playground_folder)
           end
 
           it "delete folder with powered OFF VMs" do
-            vm_runtime1.should_receive(:powerState).once.ordered { "poweredOff" }
-            vm1.should_not_receive(:PowerOffVM_Task)
-            vm_runtime2.should_receive(:powerState).once.ordered { "poweredOff" }
-            vm2.should_not_receive(:PowerOffVM_Task)
-            folder.should_receive(:Destroy_Task).once { vim_task }
+            expect(vm_runtime1).to receive(:powerState).once.ordered { "poweredOff" }
+            expect(vm1).not_to receive(:PowerOffVM_Task)
+            expect(vm_runtime2).to receive(:powerState).once.ordered { "poweredOff" }
+            expect(vm2).not_to receive(:PowerOffVM_Task)
+            expect(folder).to receive(:Destroy_Task).once { vim_task }
 
             subject.delete_folder(test_playground_folder)
           end
@@ -241,7 +241,7 @@ describe VsphereClients::VmFolderClient do
       end
 
       it "returns true" do
-        subject.folder_exists?(test_playground_folder).should == true
+        expect(subject.folder_exists?(test_playground_folder)).to eq(true)
       end
     end
 
@@ -251,7 +251,7 @@ describe VsphereClients::VmFolderClient do
       end
 
       it "returns false" do
-        subject.folder_exists?(test_playground_folder).should == false
+        expect(subject.folder_exists?(test_playground_folder)).to eq(false)
       end
     end
   end
@@ -260,7 +260,7 @@ describe VsphereClients::VmFolderClient do
     context "when folder is not found" do
       it "does not raise exception" do
         expect {
-          subject.find_vms_by_folder_name("does_not_exist_folder").should == []
+          expect(subject.find_vms_by_folder_name("does_not_exist_folder")).to eq([])
         }.not_to raise_error
       end
     end
@@ -273,44 +273,44 @@ describe VsphereClients::VmFolderClient do
       let(:sub_folder)  { double(:sub_folder) }
 
       before do
-        datacenter.stub_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
+        allow(datacenter).to receive_message_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
       end
 
       context "when folder has no VMs" do
         before do
-          sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [] }
-          sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [] }
+          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
 
-          folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [] }
+          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [] }
         end
 
         it "returns empty array when folder is empty" do
-          folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
-          subject.find_vms_by_folder_name(test_playground_folder).should == []
+          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([])
         end
 
         it "returns empty array when folder has only an empty sub-folder" do
-          folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
-          subject.find_vms_by_folder_name(test_playground_folder).should == []
+          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+          expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([])
         end
       end
 
       context "when folder has VMs" do
         before do
-          sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
-          sub_folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
+          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
 
-          folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
+          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
         end
 
         it "returns VMs in folder" do
-          folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
-          subject.find_vms_by_folder_name(test_playground_folder).should == [vm1]
+          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([vm1])
         end
 
         it "returns VMs in folder and sub-folder" do
-          folder.stub_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
-          subject.find_vms_by_folder_name(test_playground_folder).should == [vm1, vm2]
+          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+          expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([vm1, vm2])
         end
       end
     end
