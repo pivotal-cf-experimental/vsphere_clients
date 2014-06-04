@@ -14,11 +14,11 @@ describe VsphereClients::DiskPathClient do
 
   context "when it can successfully create the disk path" do
     def wait_for_disk_path_to_exist(datastore_name, disk_path)
-      wait(5, 1) { datacenter.find_datastore(datastore_name).exists?(disk_path).should be_true }
+      wait(5, 1) { expect(datacenter.find_datastore(datastore_name).exists?(disk_path)).to eq(true) }
     end
 
     def wait_for_disk_path_to_not_exist(datastore_name, disk_path)
-      wait(5, 1) { datacenter.find_datastore(datastore_name).exists?(disk_path).should be_false }
+      wait(5, 1) { expect(datacenter.find_datastore(datastore_name).exists?(disk_path)).to eq(false) }
     end
 
     after { subject.delete_path(datastore_name, test_disk_path) }
