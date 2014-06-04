@@ -1,7 +1,1 @@
 --color
-
---profile
-
---require rspec/instafail
---format RSpec::Instafail
-
