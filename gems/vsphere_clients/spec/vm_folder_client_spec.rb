@@ -31,8 +31,8 @@ describe VsphereClients::VmFolderClient do
 
     it "propagates rbvmomi errors" do
       allow(datacenter)
-        .to receive(:vmFolder)
-        .and_raise(RbVmomi::Fault.new("error", nil))
+      .to receive(:vmFolder)
+          .and_raise(RbVmomi::Fault.new("error", nil))
 
       expect {
         subject.delete_folder(nested_folder)
@@ -61,7 +61,7 @@ describe VsphereClients::VmFolderClient do
     end
 
     context "when there is a folder with slashes in the name " +
-            "that is the same as the nested path" do
+                "that is the same as the nested path" do
       let(:unnested_folder_with_slashes) { nested_folder.gsub("/", "%2f") }
 
       before do
@@ -158,28 +158,30 @@ describe VsphereClients::VmFolderClient do
       end
 
       context "when folder contains VMs" do
-        let(:vim_task)    { double(:vim_task, wait_for_completion: true) }
+        let(:vim_task) { double(:vim_task, wait_for_completion: true) }
 
         let(:vm_runtime1) { double(:runtime1) }
-        let(:vm1)         { double(:vm1, name: "vm-name1", runtime: vm_runtime1) }
+        let(:vm1) { double(:vm1, name: "vm-name1", runtime: vm_runtime1) }
 
         let(:vm_runtime2) { double(:runtime2) }
-        let(:vm2)         { double(:vm2, name: "vm-name2", runtime: vm_runtime2) }
+        let(:vm2) { double(:vm2, name: "vm-name2", runtime: vm_runtime2) }
 
-        let(:folder)        { double(:folder, name: "vm-folder") }
-        let(:sub_folder)    { double(:sub_folder, name: "sub-folder") }
+        let(:folder) { double(:folder, name: "vm-folder") }
+        let(:sub_folder) { double(:sub_folder, name: "sub-folder") }
+        let(:child_entity) { double("childEntity") }
 
         before do
-          allow(datacenter).to receive_message_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
-          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
-          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          vm_folder = double("vmFolder")
+          allow(vm_folder).to receive(:traverse).with(test_playground_folder) { folder }
+          allow(datacenter).to receive(:vmFolder).and_return(vm_folder)
+
+          allow(folder).to receive(:childEntity).and_return(child_entity)
         end
 
-
         context "when VMs are in folder" do
-          before  do
-            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1, vm2] }
-            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          before do
+            allow(child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [vm1, vm2] }
+            allow(child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [] }
           end
 
           it "deletes folder with powered ON VMs" do
@@ -204,9 +206,14 @@ describe VsphereClients::VmFolderClient do
         end
 
         context "when VMs are in sub-folders" do
-          before  do
-            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
-            allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+          before do
+            allow(child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
+            allow(child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+
+            sub_folder_child_entity = double("sub-folder childEntity")
+            allow(sub_folder_child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
+            allow(sub_folder_child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [] }
+            allow(sub_folder).to receive(:childEntity).and_return(sub_folder_child_entity)
           end
 
           it "deletes folder with powered ON VMs" do
@@ -269,47 +276,59 @@ describe VsphereClients::VmFolderClient do
       let(:vm1) { double(:vm1) }
       let(:vm2) { double(:vm2) }
 
-      let(:folder)      { double(:folder) }
-      let(:sub_folder)  { double(:sub_folder) }
+      let(:folder) { double(:folder) }
+      let(:sub_folder) { double(:sub_folder) }
+
+      let(:child_entity) { double("childEntity") }
 
       before do
-        allow(datacenter).to receive_message_chain(:vmFolder, :traverse).with(test_playground_folder) { folder }
+        vm_folder = double("vmFolder")
+        allow(vm_folder).to receive(:traverse).with(test_playground_folder) { folder }
+        allow(datacenter).to receive(:vmFolder).and_return(vm_folder)
+
+        allow(folder).to receive(:childEntity).and_return(child_entity)
       end
 
       context "when folder has no VMs" do
         before do
-          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [] }
-          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          sub_folder_child_entity = double("sub-folder childEntity")
+          allow(sub_folder_child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [] }
+          allow(sub_folder_child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(sub_folder).to receive(:childEntity).and_return(sub_folder_child_entity)
 
-          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [] }
+          allow(child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [] }
+          allow(folder).to receive(:childEntity).and_return(child_entity)
         end
 
         it "returns empty array when folder is empty" do
-          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [] }
           expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([])
         end
 
         it "returns empty array when folder has only an empty sub-folder" do
-          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+          allow(child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
           expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([])
         end
       end
 
       context "when folder has VMs" do
         before do
-          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
-          allow(sub_folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          sub_folder_child_entity = double("sub-folder childEntity")
+          allow(sub_folder_child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [vm2] }
+          allow(sub_folder_child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(sub_folder).to receive(:childEntity).and_return(sub_folder_child_entity)
 
-          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
+          allow(child_entity).to receive(:grep).with(RbVmomi::VIM::VirtualMachine) { [vm1] }
+          allow(folder).to receive(:childEntity).and_return(child_entity)
         end
 
         it "returns VMs in folder" do
-          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [] }
+          allow(child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [] }
           expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([vm1])
         end
 
         it "returns VMs in folder and sub-folder" do
-          allow(folder).to receive_message_chain(:childEntity, :grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
+          allow(child_entity).to receive(:grep).with(RbVmomi::VIM::Folder) { [sub_folder] }
           expect(subject.find_vms_by_folder_name(test_playground_folder)).to eq([vm1, vm2])
         end
       end
