@@ -1,9 +1,8 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
 # Specify your gem's dependencies in vsphere_clients.gemspec
 gemspec
 
 group :development do
-  gem "fixture_helpers", path: "../fixture_helpers"
   gem "vsphere_integration", path: "../vsphere_integration"
 end

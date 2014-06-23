@@ -1,12 +1,13 @@
 require "spec_helper"
 require "vm_folder_client"
 require "logger"
+require "yaml"
 
 describe VsphereClients::VmFolderClient do
   let(:test_playground_folder) { "vm_folder_client_spec_playground" }
   let(:parent_folder) { "#{test_playground_folder}/foo" }
   let(:nested_folder) { "#{parent_folder}/bargle" }
-  let(:vsphere_environment) { create_vsphere_environment(fixture_yaml("config-#{`hostname`.strip}.yml")) }
+  let(:vsphere_environment) { create_vsphere_environment(YAML.load_file(fixture_file("config-#{`hostname`.strip}.yml"))) }
   let(:datacenter) { vsphere_environment.datacenter }
 
   after(:all) { subject.delete_folder(test_playground_folder) }
