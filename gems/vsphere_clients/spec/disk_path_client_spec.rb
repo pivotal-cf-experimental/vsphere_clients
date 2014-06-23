@@ -18,7 +18,7 @@ describe VsphereClients::DiskPathClient do
     end
 
     def wait_for_disk_path_to_not_exist(datastore_name, disk_path)
-      wait(5, 1) { expect(datacenter.find_datastore(datastore_name).exists?(disk_path)).to eq(false) }
+      wait(10, 1) { expect(datacenter.find_datastore(datastore_name).exists?(disk_path)).to eq(false) }
     end
 
     after { subject.delete_path(datastore_name, test_disk_path) }
