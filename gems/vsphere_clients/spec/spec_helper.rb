@@ -1,5 +1,8 @@
 SPEC_ROOT=__dir__.freeze
 
+require "logger"
+require "yaml"
+
 def fixture_file(fixture_filename)
   File.join(SPEC_ROOT, "fixtures", fixture_filename)
 end

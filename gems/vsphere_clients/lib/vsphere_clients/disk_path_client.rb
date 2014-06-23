@@ -1,3 +1,6 @@
+require "net/http"
+require "openssl"
+
 module VsphereClients
   class DiskPathClient
     class NonceNotFoundError < StandardError; end
