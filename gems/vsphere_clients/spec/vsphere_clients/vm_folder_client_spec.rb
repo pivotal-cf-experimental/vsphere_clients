@@ -1,4 +1,5 @@
 require "spec_helper"
+require "vsphere_clients/configuration"
 require "vsphere_clients/vm_folder_client"
 
 module VsphereClients
@@ -6,7 +7,9 @@ module VsphereClients
     let(:test_playground_folder) { "vm_folder_client_spec_playground" }
     let(:parent_folder) { "#{test_playground_folder}/foo" }
     let(:nested_folder) { "#{parent_folder}/bargle" }
-    let(:vsphere_environment) { create_vsphere_environment(YAML.load_file(fixture_file("config-#{`hostname`.strip}.yml"))) }
+    let(:vsphere_environment) do
+      Configuration.from_hash(YAML.load_file(fixture_file("config-#{`hostname`.strip}.yml")))
+    end
     let(:datacenter) { vsphere_environment.datacenter }
 
     after(:all) { subject.delete_folder(test_playground_folder) }

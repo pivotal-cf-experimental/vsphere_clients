@@ -1,11 +1,14 @@
 require "spec_helper"
+require "vsphere_clients/configuration"
 require "vsphere_clients/disk_path_client"
 
 module VsphereClients
   describe DiskPathClient do
     let(:test_disk_path) { "disk_path_spec_playground" }
     let(:logger) { Logger.new(STDERR).tap { |l| l.level = Logger::FATAL } }
-    let(:vsphere_environment) { create_vsphere_environment(YAML.load_file(fixture_file("config-#{`hostname`.strip}.yml"))) }
+    let(:vsphere_environment) do
+      Configuration.from_hash(YAML.load_file(fixture_file("config-#{`hostname`.strip}.yml")))
+    end
     let(:username) { vsphere_environment.username }
     let(:password) { vsphere_environment.password }
     let(:datacenter) { vsphere_environment.datacenter }

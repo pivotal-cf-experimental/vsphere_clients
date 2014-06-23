@@ -2,7 +2,3 @@ source "https://rubygems.org"
 
 # Specify your gem's dependencies in vsphere_clients.gemspec
 gemspec
-
-group :development do
-  gem "vsphere_integration", path: "../vsphere_integration"
-end
