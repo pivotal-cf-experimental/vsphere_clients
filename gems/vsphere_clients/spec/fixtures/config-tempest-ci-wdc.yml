@@ -1,6 +1,0 @@
----
-vcenter_ip: 10.146.17.1
-username: root
-password: vmware
-datacenter_name: wdc51-dc
-datastore_name: datastore_1800

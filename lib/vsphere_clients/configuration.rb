@@ -1,14 +1,14 @@
-require "rbvmomi"
+require 'rbvmomi'
 
 module VsphereClients
   class Configuration
     def self.from_hash(config)
       new(
-        config["vcenter_ip"],
-        config["username"],
-        config["password"],
-        config["datacenter_name"],
-        config["datastore_name"],
+        config['vcenter_ip'],
+        config['username'],
+        config['password'],
+        config['datacenter_name'],
+        config['datastore_name'],
       )
     end
 

@@ -1,5 +1,5 @@
-require "net/http"
-require "openssl"
+require 'net/http'
+require 'openssl'
 
 module VsphereClients
   class DiskPathClient
@@ -20,19 +20,19 @@ module VsphereClients
     # - Obtain CSRF token from *any* form on the site.
     # - Cannot use cookie from the connection since it's a different api.
     def start_session!
-      request = Net::HTTP::Get.new("/mob/?moid=FileManager&method=makeDirectory")
+      request = Net::HTTP::Get.new('/mob/?moid=FileManager&method=makeDirectory')
       request.basic_auth(@user, @password)
 
-      @logger.info("disk_path_client.start_session.started")
+      @logger.info('disk_path_client.start_session.started')
       response = http_client.request(request)
 
-      @cookie = response["Set-Cookie"]
+      @cookie = response['Set-Cookie']
       @nonce = response.body.scan(CSRF_NONCE_INPUT).flatten.first
 
       if @nonce.nil?
-        @logger.error("disk_path_client.start_session.failed")
+        @logger.error('disk_path_client.start_session.failed')
         @logger.error(response.body)
-        raise(NonceNotFoundError, "Failed to obtain VMware session nonce, you may need to enable vCenter Server Managed Object Browser")
+        raise(NonceNotFoundError, 'Failed to obtain VMware session nonce, you may need to enable vCenter Server Managed Object Browser')
       end
     end
 
@@ -65,7 +65,7 @@ module VsphereClients
     # same as above, but skip checking for slashes in the path name
     def create_path!(datastore_name, disk_path)
       request = build_nonced_form_post(
-        "/mob/?moid=FileManager&method=makeDirectory", {
+        '/mob/?moid=FileManager&method=makeDirectory', {
         name: "[#{datastore_name}] #{disk_path}",
         datacenter: %{<datacenter type="Datacenter" xsi:type="ManagedObjectReference">#{@datacenter_ref}</datacenter>},
         createParentDirectories: true,
@@ -83,7 +83,7 @@ module VsphereClients
     # same as above, but skip checking for slashes in the path name
     def delete_path!(datastore_name, disk_path)
       request = build_nonced_form_post(
-        "/mob/?moid=FileManager&method=deleteFile", {
+        '/mob/?moid=FileManager&method=deleteFile', {
         name: "[#{datastore_name}] #{disk_path}",
         datacenter: %{<datacenter type="Datacenter" xsi:type="ManagedObjectReference">#{@datacenter_ref}</datacenter>},
       })
@@ -99,15 +99,15 @@ module VsphereClients
 
     def uri
       http = @datacenter._connection.http
-      @uri ||= URI.parse("http#{"s" if http.use_ssl?}://#{http.address}:#{http.port}")
+      @uri ||= URI.parse("http#{'s' if http.use_ssl?}://#{http.address}:#{http.port}")
     end
 
     def build_nonced_form_post(request_path, form_attrs)
       Net::HTTP::Post.new(request_path).tap do |r|
         r.basic_auth(@user, @password)
-        r["Cookie"] = @cookie
-        r["Content-Type"] = "application/x-www-form-urlencoded"
-        r.body = URI.encode_www_form(form_attrs.merge("vmware-session-nonce" => @nonce))
+        r['Cookie'] = @cookie
+        r['Content-Type'] = 'application/x-www-form-urlencoded'
+        r.body = URI.encode_www_form(form_attrs.merge('vmware-session-nonce' => @nonce))
       end
     end
 
@@ -122,7 +122,7 @@ module VsphereClients
       <<-MSG
         #{msg}
         Code: #{response.code}
-        Body: <hidden>...#{response.body.split("</style>").last}
+        Body: <hidden>...#{response.body.split('</style>').last}
       MSG
     end
   end

@@ -1,6 +1,0 @@
----
-vcenter_ip: 172.16.64.3
-username: root
-password: vmware
-datacenter_name: anchovy-dc
-datastore_name: anchovy-ds

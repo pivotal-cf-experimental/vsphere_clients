@@ -8,10 +8,10 @@ module VsphereClients
     def power_off
       power_state = @vm.runtime.powerState
 
-      @logger.info("vm_folder_client.delete_folder.power_off " +
+      @logger.info('vm_folder_client.delete_folder.power_off ' +
         "vm=#{@vm.name} power_state=#{power_state}")
 
-      unless power_state == "poweredOff"
+      unless power_state == 'poweredOff'
         # Trying to catch
         # 'InvalidPowerState: The attempted operation cannot be performed
         # in the current state (Powered off). (RbVmomi::Fault)'
@@ -29,7 +29,7 @@ module VsphereClients
       blk.call
     rescue Exception => e
       tries -= 1
-      if e.message.start_with?("InvalidPowerState") && tries > 0
+      if e.message.start_with?('InvalidPowerState') && tries > 0
         retry
       else
         raise
