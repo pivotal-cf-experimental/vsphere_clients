@@ -13,8 +13,7 @@ module VsphereClients
     # @param template_folder [VIM::Folder] Folder in which all templates are kept
     # @param vm_folder [VIM::Folder] Folder into which to deploy VMs
     # @param datastore [VIM::Folder] Datastore to store template/VM in
-    # @param opts [Hash] Additional parameters
-    def initialize vim, network, computer, resource_pool_name, template_folder, vm_folder, datastore, opts = {}
+    def initialize vim, network, computer, resource_pool_name, template_folder, vm_folder, datastore
       @vim = vim
       @network = network
       @computer = computer
@@ -22,19 +21,15 @@ module VsphereClients
       @template_folder = template_folder
       @vmfolder = vm_folder
       @datastore = datastore
-      @logger = opts[:logger]
     end
 
     def resource_pool
-      computer.resourcePool.resourcePool.find { |rp| rp.name == resource_pool_name }
+      @rp ||= computer.resourcePool.resourcePool.find { |rp| rp.name == resource_pool_name }
     end
 
     def log x
-      if @logger
-        @logger.info x
-      else
-        puts "#{Time.now}: #{x}"
-      end
+      # XXX: Should find a better way for users to customize how logging is done
+      puts "#{Time.now}: #{x}"
     end
 
     # Internal helper method that executes the passed in block while disabling
@@ -74,25 +69,11 @@ module VsphereClients
     #                             to set annotations.
     # @return [VIM::VirtualMachine] The template as a VIM::VirtualMachine instance
     def upload_ovf_as_template ovf_url, template_name, opts = {}
-      # Optimization: If there happens to be a fully prepared template, then
-      # there is no need to do the complicated OVF upload dance
-      template = lookup_template template_name
-      if template
-        return template
-      end
-
       # The OVFManager expects us to know the names of the networks mentioned
       # in the OVF file so we can map them to VIM::Network objects. For
       # simplicity this function assumes we need to read the OVF file
       # ourselves to know the names, and we map all of them to the same
       # VIM::Network.
-
-      # If we're handling a file:// URI we need to strip the scheme as open-uri
-      # can't handle them.
-      if URI(ovf_url).scheme == "file" && URI(ovf_url).host.nil?
-        ovf_url = URI(ovf_url).path
-      end
-
       ovf = open(ovf_url, 'r'){|io| Nokogiri::XML(io.read)}
       ovf.remove_namespaces!
       networks = ovf.xpath('//NetworkSection/Network').map{|x| x['name']}
@@ -169,10 +150,11 @@ module VsphereClients
         # prepare it for (linked) cloning and mark it as a template to signal
         # we are done.
         if !wait_for_template
-          config = opts[:config] || {}
-          config = vm.update_spec_add_delta_disk_layer_on_all_disks(config)
-          # XXX: Should we add a version that does retries?
-          vm.ReconfigVM_Task(:spec => config).wait_for_completion
+          vm.add_delta_disk_layer_on_all_disks
+          if opts[:config]
+            # XXX: Should we add a version that does retries?
+            vm.ReconfigVM_Task(:spec => opts[:config]).wait_for_completion
+          end
           vm.MarkAsTemplate
         end
       end
@@ -197,10 +179,9 @@ module VsphereClients
     #                               or nil
     def lookup_template template_name
       template_path = "#{template_name}-#{@computer.name}"
-      template = @template_folder.traverse(template_path, RbVmomi::VIM::VirtualMachine)
+      template = @template_folder.traverse(template_path, VIM::VirtualMachine)
       if template
-        config = template.config
-        is_template = config && config.template
+        is_template = template.collect 'config.template'
         if !is_template
           template = nil
         end
