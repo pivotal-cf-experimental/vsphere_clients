@@ -4,7 +4,7 @@ require 'rbvmomi'
 
 module VsphereClients
   class CachedOvfDeployer
-    attr_reader :resource_pool_name, :computer
+    attr_reader :resource_pool, :computer
 
     # Constructor. Gets the VIM connection and important VIM objects
     # @param vim [VIM] VIM Connection
@@ -13,18 +13,14 @@ module VsphereClients
     # @param template_folder [VIM::Folder] Folder in which all templates are kept
     # @param vm_folder [VIM::Folder] Folder into which to deploy VMs
     # @param datastore [VIM::Folder] Datastore to store template/VM in
-    def initialize vim, network, computer, resource_pool_name, template_folder, vm_folder, datastore
+    def initialize vim, network, computer, resource_pool, template_folder, vm_folder, datastore
       @vim = vim
       @network = network
       @computer = computer
-      @resource_pool_name = resource_pool_name
+      @resource_pool = resource_pool
       @template_folder = template_folder
       @vmfolder = vm_folder
       @datastore = datastore
-    end
-
-    def resource_pool
-      @rp ||= computer.resourcePool.resourcePool.find { |rp| rp.name == resource_pool_name }
     end
 
     def log x
