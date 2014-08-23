@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = 'vsphere_clients'
-  spec.version       = '0.0.0'
+  spec.version       = '0.0.1'
   spec.authors       = ''
   spec.summary       = 'Tools to connect to vSphere'
 
