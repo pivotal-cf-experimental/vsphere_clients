@@ -23,7 +23,9 @@ module VsphereClients
     end
 
     def datacenter
-      @datacenter ||= connection.serviceInstance.find_datacenter(@datacenter_name)
+      return @datacenter if @datacenter
+      match = connection.searchIndex.FindByInventoryPath(inventoryPath: @datacenter_name)
+      @datacenter = match if match and match.is_a?(RbVmomi::VIM::Datacenter)
     end
 
     private
