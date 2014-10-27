@@ -6,7 +6,7 @@ module VsphereClients
   describe DiskPathClient do
     let(:test_disk_path) { 'disk_path_spec_playground' }
     let(:logger) { Logger.new(STDERR).tap { |l| l.level = Logger::FATAL } }
-    let(:vsphere_environment) { Configuration.from_hash(vcenter_config_hash) }
+    let(:vsphere_environment) { Configuration.new(vcenter_config_hash) }
     let(:username) { vsphere_environment.username }
     let(:password) { vsphere_environment.password }
     let(:datacenter) { vsphere_environment.datacenter }

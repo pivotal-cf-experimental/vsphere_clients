@@ -2,19 +2,9 @@ require 'rbvmomi'
 
 module VsphereClients
   class Configuration
-    def self.from_hash(config)
-      new(
-        config['vcenter_ip'],
-        config['username'],
-        config['password'],
-        config['datacenter_name'],
-        config['datastore_name'],
-      )
-    end
-
     attr_reader :vcenter_ip, :username, :password, :datastore_name
 
-    def initialize(vcenter_ip, username, password, datacenter_name, datastore_name)
+    def initialize(vcenter_ip:, username:, password:, datacenter_name:, datastore_name:)
       @vcenter_ip = vcenter_ip
       @username = username
       @password = password

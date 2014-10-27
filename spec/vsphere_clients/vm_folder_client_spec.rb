@@ -8,7 +8,7 @@ module VsphereClients
 
     let(:parent_folder) { "#{TEST_PLAYGROUND_FOLDER}/foo" }
     let(:nested_folder) { "#{parent_folder}/bargle" }
-    let(:vsphere_environment) { Configuration.from_hash(vcenter_config_hash) }
+    let(:vsphere_environment) { Configuration.new(vcenter_config_hash) }
     let(:datacenter) { vsphere_environment.datacenter }
     let(:logger) { Logger.new(STDERR).tap { |l| l.level = Logger::FATAL } }
 
@@ -19,7 +19,7 @@ module VsphereClients
       logger.level = Logger::FATAL
 
       VmFolderClient.new(
-        Configuration.from_hash(vcenter_config_hash).datacenter,
+        Configuration.new(vcenter_config_hash).datacenter,
         logger,
       ).delete_folder(TEST_PLAYGROUND_FOLDER)
     end

@@ -8,11 +8,11 @@ Dotenv.load
 
 def vcenter_config_hash
   {
-    'vcenter_ip'      => ENV['VCENTER_IP'],
-    'username'        => ENV['USERNAME'],
-    'password'        => ENV['PASSWORD'],
-    'datacenter_name' => ENV['DATACENTER_NAME'],
-    'datastore_name'  => ENV['DATASTORE_NAME'],
+    vcenter_ip: ENV['VCENTER_IP'],
+    username: ENV['USERNAME'],
+    password: ENV['PASSWORD'],
+    datacenter_name: ENV['DATACENTER_NAME'],
+    datastore_name: ENV['DATASTORE_NAME'],
   }
 end
 
