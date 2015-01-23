@@ -12,5 +12,5 @@ docker run \
   --env=PASSWORD=${PASSWORD} \
   --env=DATACENTER_NAME=${DATACENTER_NAME} \
   --env=DATASTORE_NAME=${DATASTORE_NAME} \
-  ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME} \
+  ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME} \
   /bin/sh -c 'bundle && bundle exec rspec --format documentation'
