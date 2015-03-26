@@ -15,6 +15,18 @@ module VsphereClients
     subject(:disk_path_client) { DiskPathClient.new(username, password, datacenter, logger).tap(&:start_session!) }
 
     context 'when it can successfully create the disk path' do
+      def wait(retries_left, &blk)
+        blk.call
+      rescue RSpec::Expectations::ExpectationNotMetError, NoMethodError
+        retries_left -= 1
+        if retries_left > 0
+          sleep(1)
+          retry
+        else
+          raise
+        end
+      end
+
       def wait_for_disk_path_to_exist(datastore_name, disk_path)
         wait(10) { expect(datacenter.find_datastore(datastore_name).exists?(disk_path)).to eq(true) }
       end
